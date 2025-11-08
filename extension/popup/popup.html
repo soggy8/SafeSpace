@@ -1,11 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8" />
+  <title>SafeSpace</title>
+  <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
-    
+  <div class="popup-wrapper">
+    <!-- Header -->
+    <header class="header">
+  <img src="logo.png" class="logo-img" alt="SafeSpace Logo" />
+  <div class="title-wrap">
+    <h1>SafeSpace</h1>
+    <p class="subtitle">Digital wellbeing & safe browsing</p>
+  </div>
+</header>
+
+
+    <div class="toggles-row">
+      <button id="themeToggle" class="chip-btn">
+        🌙 Dark mode
+      </button>
+      <button id="safeBrowsingToggle" class="chip-btn chip-on">
+        🛡 Safe browsing: On
+      </button>
+    </div>
+
+    <!-- Screen Time Summary -->
+    <section class="card screen-time-card">
+      <div class="label-row">
+        <span class="section-label">Today’s screen time</span>
+        <span class="limit-label">Limit: <span id="dailyLimitLabel">2h 00m</span></span>
+      </div>
+
+      <div class="time-row">
+        <div class="time-main">
+          <span id="usedTime" class="time-value">1h 32m</span>
+          <span class="time-caption">used so far</span>
+        </div>
+        <div class="time-progress">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <span id="remainingLabel" class="remaining-label">28m remaining</span>
+        </div>
+      </div>
+
+      <div id="limitStatus" class="limit-status limit-ok">
+        ✅ You’re within your healthy range.
+      </div>
+    </section>
+
+    <!-- Notifications / Events -->
+    <section class="card notifications-card">
+      <div class="label-row">
+        <span class="section-label">Recent alerts</span>
+      </div>
+      <ul class="events-list" id="eventsList">
+        <li class="event-item event-warning">
+          ⛔ Blocked: <span class="site">toxic-site.com</span> (unsafe content)
+        </li>
+        <li class="event-item event-soft">
+          ⏱ You hit 60 min on <span class="site">youtube.com</span>. Break suggested.
+        </li>
+        <li class="event-item event-soft">
+          🌿 Wellbeing tip: Look away from the screen for 20 seconds.
+        </li>
+      </ul>
+    </section>
+
+    <!-- Actions -->
+    <section class="actions">
+      <button id="focusModeBtn" class="btn primary-btn">
+        ✨ Start Focus Mode
+      </button>
+      <button id="openDashboardBtn" class="btn ghost-btn">
+        📊 Open Dashboard & Settings
+      </button>
+    </section>
+
+    <!-- Bottom status -->
+    <footer class="footer">
+      <span class="status-dot"></span>
+      <span class="footer-text">Monitoring active · Safe browsing enabled</span>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
 </body>
 </html>
