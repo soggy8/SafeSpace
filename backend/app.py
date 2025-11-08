@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 from threading import Lock
 from typing import Any, Dict
 
@@ -17,6 +18,14 @@ _usage_stats: Dict[str, Any] = {
     "flagged_messages": 0,
 }
 _active_users: set[str] = set()
+_flagged_messages: list[Dict[str, Any]] = []
+_FLAGGED_HISTORY_LIMIT = 200
+_focus_state: Dict[str, Any] = {
+    "active": False,
+    "started_at": None,
+    "blocked_sites": [],
+    "total_focus_time": timedelta(),
+}
 
 
 def _update_usage_stats(user: str, flagged: bool) -> None:
@@ -26,6 +35,41 @@ def _update_usage_stats(user: str, flagged: bool) -> None:
             _usage_stats["flagged_messages"] += 1
         if user:
             _active_users.add(user)
+
+
+def _record_flagged_message(user: str, text: str, categories: Dict[str, Any]) -> None:
+    entry = {
+        "user": user or "unknown",
+        "text": text,
+        "categories": categories,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+    with _stats_lock:
+        _flagged_messages.append(entry)
+        if len(_flagged_messages) > _FLAGGED_HISTORY_LIMIT:
+            _flagged_messages.pop(0)
+
+
+def _get_focus_status() -> Dict[str, Any]:
+    with _stats_lock:
+        active = _focus_state["active"]
+        started_at = _focus_state["started_at"]
+        total_focus = _focus_state["total_focus_time"]
+        blocked_sites = list(_focus_state["blocked_sites"])
+
+    if active and started_at:
+        elapsed = datetime.now(timezone.utc) - started_at
+    else:
+        elapsed = timedelta()
+
+    total_seconds = int((total_focus + elapsed).total_seconds())
+
+    return {
+        "active": active,
+        "started_at": started_at.isoformat() if started_at else None,
+        "duration_seconds": total_seconds,
+        "blocked_sites": blocked_sites,
+    }
 
 
 @app.route("/")
@@ -48,6 +92,13 @@ def moderate() -> Any:
     except ModerationError as exc:
         return jsonify({"error": str(exc)}), 503
 
+    if moderation_result.get("flagged"):
+        _record_flagged_message(
+            payload.get("user") or "api",
+            text,
+            moderation_result.get("categories", {}),
+        )
+
     return jsonify(moderation_result)
 
 
@@ -57,8 +108,54 @@ def stats() -> Any:
         response = {
             **_usage_stats,
             "active_users": len(_active_users),
+            "flagged_recent": len(_flagged_messages),
+            "focus_active": _focus_state["active"],
+            "focus_duration_seconds": _get_focus_status()["duration_seconds"],
         }
     return jsonify(response)
+
+
+@app.route("/flagged")
+def flagged_messages() -> Any:
+    with _stats_lock:
+        return jsonify({"messages": list(_flagged_messages)})
+
+
+@app.route("/focus/start", methods=["POST"])
+def focus_start() -> Any:
+    payload = request.get_json(silent=True) or {}
+    sites = payload.get("blocked_sites") or payload.get("sites") or []
+    now = datetime.now(timezone.utc)
+
+    with _stats_lock:
+        if not _focus_state["active"]:
+            _focus_state["started_at"] = now
+            _focus_state["active"] = True
+        _focus_state["blocked_sites"] = list({site.lower() for site in sites})
+
+    status = _get_focus_status()
+    socketio.emit("focus_status", status)
+    return jsonify(status)
+
+
+@app.route("/focus/stop", methods=["POST"])
+def focus_stop() -> Any:
+    now = datetime.now(timezone.utc)
+    with _stats_lock:
+        if _focus_state["active"] and _focus_state["started_at"]:
+            _focus_state["total_focus_time"] += now - _focus_state["started_at"]
+        _focus_state["active"] = False
+        _focus_state["started_at"] = None
+
+    status = _get_focus_status()
+    socketio.emit("focus_status", status)
+    return jsonify(status)
+
+
+@app.route("/focus/status")
+def focus_status() -> Any:
+    status = _get_focus_status()
+    return jsonify(status)
 
 
 @socketio.on("send_message")
@@ -85,6 +182,13 @@ def handle_send_message(data: Dict[str, Any]) -> None:
 
     flagged = moderation_result["flagged"]
     _update_usage_stats(user, flagged)
+
+    if flagged:
+        _record_flagged_message(
+            user,
+            message,
+            moderation_result.get("categories", {}),
+        )
 
     socketio.emit(
         "message_response",
