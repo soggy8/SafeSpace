@@ -1,54 +1,183 @@
-body{
-    margin: 0;
-    font-family: Arial;
-    background-color: #f5f8fc;
-}
-.nav_menu{
-    margin: auto;
-    position: absolute;
-    text-align: left;
+* {
+  box-sizing: border-box;
 }
 
-.side_menu{
-    margin-left: 10px;
-    width: 150px;
-    height: 30vh;
-    border-radius: 10px;
-    display: block;
-    padding: 10px;
-    transition: transform 0.3s ease;
-    background: #3b82f6;
+body {
+  margin: 0;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: #f3f4f6;
+  color: #1f2937;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-.side_menu.hidden{
-    transform: translateX(-120%);
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  background: white;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
 }
 
-.menu_btn{
-    margin: 10px;
-    border-radius: 10px;
-
+.logo h1 {
+  margin: 0;
+  font-size: 24px;
 }
 
-.content{
-    margin-left: 160px;
-    padding: 20px;
-    transition: margin-left 0.3 ease;
+.logo p {
+  margin: 4px 0 0;
+  color: #6b7280;
+  font-size: 14px;
 }
 
-.logo{
-    margin: 10px;
-    padding: 10px;
-    background-color: #3b82f6;
-    border-radius: 5px;
-    width: 150px;
-    height: 90px;
+.refresh-btn {
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.25);
+  transition: transform 0.2s ease;
 }
 
-.layout{
-    display: block;
+.refresh-btn:hover {
+  transform: translateY(-1px);
 }
 
-.menu_div{
-    
+.layout {
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  flex: 1;
+}
+
+.cards {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: white;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.metric {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.text-danger {
+  color: #ef4444;
+}
+
+.caption {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.panel {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 14px;
+}
+
+thead th {
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.table-wrapper {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.empty {
+  text-align: center;
+  color: #9ca3af;
+}
+
+.blocked-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.blocked-list li {
+  padding: 10px 12px;
+  background: #eff6ff;
+  border-radius: 12px;
+  color: #1d4ed8;
+  font-weight: 500;
+}
+
+.blocked-list .empty {
+  background: #f9fafb;
+  color: #6b7280;
+  border: 1px dashed #d1d5db;
+}
+
+.footer {
+  padding: 16px 24px;
+  background: #111827;
+  color: #d1d5db;
+  font-size: 13px;
+  text-align: center;
+}
+
+.footer code {
+  background: rgba(255, 255, 255, 0.12);
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+@media (max-width: 960px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
 }

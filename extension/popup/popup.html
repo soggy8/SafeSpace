@@ -54,23 +54,24 @@
     <!-- Notifications / Events -->
     <section class="card notifications-card">
       <div class="label-row">
-        <span class="section-label">Recent alerts</span>
+        <span class="section-label">Recent flagged messages</span>
       </div>
-      <ul class="events-list" id="eventsList">
-        <li class="event-item event-warning">
-          ⛔ Blocked: <span class="site">toxic-site.com</span> (unsafe content)
-        </li>
-        <li class="event-item event-soft">
-          ⏱ You hit 60 min on <span class="site">youtube.com</span>. Break suggested.
-        </li>
-        <li class="event-item event-soft">
-          🌿 Wellbeing tip: Look away from the screen for 20 seconds.
-        </li>
+      <ul class="events-list" id="flaggedList">
+        <li class="event-item event-soft">No flagged messages in focus window.</li>
       </ul>
     </section>
 
     <!-- Actions -->
     <section class="actions">
+      <label class="focus-label" for="blockedSitesInput">
+        Block these sites during focus (comma separated):
+      </label>
+      <input
+        id="blockedSitesInput"
+        class="text-input"
+        placeholder="youtube.com, reddit.com"
+        type="text"
+      />
       <button id="focusModeBtn" class="btn primary-btn">
         ✨ Start Focus Mode
       </button>

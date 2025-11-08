@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>SafeSpace Focus Mode</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #f3f4f6;
+        color: #1f2937;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+      }
+
+      .card {
+        background: white;
+        padding: 32px;
+        border-radius: 16px;
+        max-width: 420px;
+        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.15);
+        text-align: center;
+      }
+
+      h1 {
+        margin-bottom: 12px;
+        font-size: 1.6rem;
+      }
+
+      p {
+        line-height: 1.5;
+      }
+
+      .site {
+        font-weight: bold;
+        color: #ef4444;
+      }
+
+      button {
+        margin-top: 20px;
+        padding: 10px 18px;
+        border: none;
+        border-radius: 999px;
+        cursor: pointer;
+        background: #3b82f6;
+        color: white;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <h1>Stay Focused 🚀</h1>
+      <p>
+        <span class="site" id="blockedSite">This site</span> is blocked while focus mode is
+        active. Take a deep breath and stay on track!
+      </p>
+      <button id="backBtn">Go back</button>
+    </main>
+    <script src="blocked.js"></script>
+  </body>
+</html>
+

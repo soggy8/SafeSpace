@@ -1,32 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <link rel="stylesheet" href="style.css" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard</title>
-    <div class="logo">
-      <h2>SafeSpace</h2>
-      <p>The place to be safe</p>
-    </div>
+    <title>SafeSpace Dashboard</title>
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div class="layout">
-    <div class="menu_div"><button class="menu_btn" id="menu_btn">Menu</button></div>
-    <div class="side_menu" id="side_menu">
-      <div class="nav_menu" id="nav_menu">
-        Navigation
-        <ul>
-          <li>Overview</li>
-          <li>Screen Time</li>
-          <li>Safety</li>
-          <li>Focus Mode</li>
-          <li>Settings</li>
-        </ul>
+    <header class="header">
+      <div class="logo">
+        <h1>SafeSpace</h1>
+        <p>Digital wellbeing & safety overview</p>
       </div>
-    </div>
-    <div class="content"><p>Welcome to safe space</p></div>
-</div>
+      <button class="refresh-btn" id="refreshBtn">Refresh</button>
+    </header>
+
+    <main class="layout">
+      <section class="cards">
+        <article class="card">
+          <h2>Total messages</h2>
+          <p class="metric" id="totalMessages">0</p>
+          <span class="caption">All chat messages seen this session</span>
+        </article>
+        <article class="card">
+          <h2>Flagged messages</h2>
+          <p class="metric text-danger" id="flaggedMessages">0</p>
+          <span class="caption">Potentially harmful messages detected</span>
+        </article>
+        <article class="card">
+          <h2>Focus mode</h2>
+          <p class="metric" id="focusState">Inactive</p>
+          <span class="caption" id="focusDuration">0 minutes in focus</span>
+        </article>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Recently flagged messages</h2>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Message</th>
+                <th>Categories</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody id="flaggedTableBody">
+              <tr>
+                <td colspan="4" class="empty">No flagged messages yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Blocked sites during focus</h2>
+        </div>
+        <ul class="blocked-list" id="blockedSitesList">
+          <li class="empty">Focus mode is not active.</li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>Backend endpoint: <code>http://localhost:5000</code></span>
+    </footer>
+
     <script src="dashboard.js"></script>
   </body>
 </html>

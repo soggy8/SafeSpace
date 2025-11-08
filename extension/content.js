@@ -1,14 +1,13 @@
 let lastSent = 0;
 
 function report() {
-    const now = Date.now();
-    if (now - lastSent > 2000) {
-        chrome.runtime.sendMessage("active");
-        lastSent = now;
-    }
+  const now = Date.now();
+  if (now - lastSent > 2000) {
+    chrome.runtime.sendMessage({ type: "user-active" });
+    lastSent = now;
+  }
 }
 
-window.addEventListener("mousemove", report);
-window.addEventListener("keydown", report);
-window.addEventListener("scroll", report);
-window.addEventListener("click", report);
+["mousemove", "keydown", "scroll", "click"].forEach((eventName) => {
+  window.addEventListener(eventName, report, { passive: true });
+});
