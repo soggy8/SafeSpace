@@ -1,0 +1,54 @@
+body{
+    margin: 0;
+    font-family: Arial;
+    background-color: #f5f8fc;
+}
+.nav_menu{
+    margin: auto;
+    position: absolute;
+    text-align: left;
+}
+
+.side_menu{
+    margin-left: 10px;
+    width: 150px;
+    height: 30vh;
+    border-radius: 10px;
+    display: block;
+    padding: 10px;
+    transition: transform 0.3s ease;
+    background: #3b82f6;
+}
+
+.side_menu.hidden{
+    transform: translateX(-120%);
+}
+
+.menu_btn{
+    margin: 10px;
+    border-radius: 10px;
+
+}
+
+.content{
+    margin-left: 160px;
+    padding: 20px;
+    transition: margin-left 0.3 ease;
+}
+
+.logo{
+    margin: 10px;
+    padding: 10px;
+    background-color: #3b82f6;
+    border-radius: 5px;
+    width: 150px;
+    height: 90px;
+}
+
+.layout{
+    display: block;
+}
+
+.menu_div{
+    
+}
