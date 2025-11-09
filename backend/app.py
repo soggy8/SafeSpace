@@ -31,6 +31,7 @@ _focus_state: Dict[str, Any] = {
     "blocked_sites": [],
     "total_focus_time": timedelta(),
 }
+_message_history: list[Dict[str, Any]] = []
 DASHBOARD_DIR = Path(__file__).resolve().parent.parent / "dashboard"
 
 
@@ -41,6 +42,15 @@ def _update_usage_stats(user: str, flagged: bool) -> None:
             _usage_stats["flagged_messages"] += 1
         if user:
             _active_users.add(user)
+        _message_history.append(
+            {
+                "user": user or "unknown",
+                "flagged": bool(flagged),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        )
+        if len(_message_history) > 1000:
+            _message_history.pop(0)
 
 
 def _record_flagged_message(user: str, text: str, categories: Dict[str, Any]) -> None:
@@ -109,6 +119,8 @@ def moderate() -> Any:
             moderation_result.get("categories", {}),
         )
 
+    _update_usage_stats(payload.get("user") or "api", bool(moderation_result.get("flagged")))
+
     return jsonify(moderation_result)
 
 
@@ -120,8 +132,11 @@ def moderation_keywords() -> Any:
 @app.route("/stats")
 def stats() -> Any:
     with _stats_lock:
+        total_messages = len(_message_history)
+        flagged_messages = sum(1 for entry in _message_history if entry["flagged"])
         response = {
-            **_usage_stats,
+            "total_messages": total_messages,
+            "flagged_messages": flagged_messages,
             "active_users": len(_active_users),
             "flagged_recent": len(_flagged_messages),
             "focus_active": _focus_state["active"],

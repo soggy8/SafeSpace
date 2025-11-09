@@ -80,7 +80,9 @@ function updateSafeMode(enabled) {
   if (!safeModeEnabled) {
     disconnectObserver();
     removeExistingMasks();
+    reportedMatches.clear();
   } else if (keywordList.length) {
+    reportedMatches.clear();
     updateKeywordMask(keywordList);
   }
 }

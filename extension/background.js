@@ -1,3 +1,25 @@
+async function updateAudioActivity() {
+  try {
+    const audibleTabs = await queryTabs({ audible: true });
+    if (!audibleTabs?.length) return;
+
+    const activeTab = audibleTabs.find((tab) => tab.active && tab.currentWindow);
+    if (activeTab?.url?.startsWith("http")) {
+      updateDomain(activeTab.url);
+      siteTime[currentDomain] = (siteTime[currentDomain] || 0) + 1;
+      chrome.storage.local.set({ siteTime });
+    } else {
+      const firstHttp = audibleTabs.find((tab) => tab.url?.startsWith("http"));
+      if (firstHttp) {
+        updateDomain(firstHttp.url);
+        siteTime[currentDomain] = (siteTime[currentDomain] || 0) + 1;
+        chrome.storage.local.set({ siteTime });
+      }
+    }
+  } catch (error) {
+    console.warn("[SafeSpace] Unable to update audio activity:", error);
+  }
+}
 const BACKEND_URL = "http://localhost:5000";
 const USAGE_PING_INTERVAL = 1000;
 const FOCUS_SYNC_INTERVAL = 10000;
@@ -27,7 +49,12 @@ chrome.storage.local.get(["siteTime", "focusState"], (data) => {
   }
   const snapshot = data || {};
   if (snapshot.siteTime) siteTime = snapshot.siteTime;
-  if (snapshot.focusState) focusState = snapshot.focusState;
+  if (snapshot.focusState) {
+    focusState = {
+      ...snapshot.focusState,
+      blocked_sites: normalizeSiteList(snapshot.focusState.blocked_sites),
+    };
+  }
 });
 
 chrome.storage.local.get([SAFE_MODE_STORAGE_KEY], (data) => {
@@ -79,9 +106,7 @@ setInterval(() => {
 
   queryTabs({ active: true, currentWindow: true })
     .then(([tab]) => {
-      if (!tab) return;
-
-      if (tab.audible) {
+      if (tab?.audible) {
         isUserActive = true;
         lastActivity = Date.now();
       }
@@ -89,6 +114,10 @@ setInterval(() => {
     .catch((err) => {
       console.warn("[SafeSpace] Failed to query active tab:", err);
     });
+
+  updateAudioActivity().catch((err) => {
+    console.warn("[SafeSpace] Failed to check audible tabs:", err);
+  });
 
   if (Date.now() - lastActivity > 20000) {
     isUserActive = false;
@@ -123,6 +152,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     sendResponse({
       siteTime,
       focusState,
+      safeBrowsingEnabled,
     });
     return true;
   }
@@ -210,7 +240,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 async function syncFocusStatus() {
   try {
     const res = await apiFetch("/focus/status");
-    focusState = res;
+    focusState = {
+      ...res,
+      blocked_sites: normalizeSiteList(res?.blocked_sites),
+    };
     chrome.storage.local.set({ focusState });
     chrome.runtime.sendMessage({ type: "focus-status", status: focusState });
     await enforceFocusAcrossTabs();
@@ -220,9 +253,7 @@ async function syncFocusStatus() {
 }
 
 async function startFocus(blockedSites) {
-  const cleanSites = (blockedSites || [])
-    .map((site) => site.trim().toLowerCase())
-    .filter(Boolean);
+  const cleanSites = normalizeSiteList(blockedSites);
 
   const status = await apiFetch("/focus/start", {
     method: "POST",
@@ -230,7 +261,10 @@ async function startFocus(blockedSites) {
     body: JSON.stringify({ blocked_sites: cleanSites }),
   });
 
-  focusState = status;
+  focusState = {
+    ...status,
+    blocked_sites: normalizeSiteList(status?.blocked_sites),
+  };
   chrome.storage.local.set({ focusState });
   chrome.runtime.sendMessage({ type: "focus-status", status: focusState });
   await enforceFocusAcrossTabs();
@@ -239,7 +273,10 @@ async function startFocus(blockedSites) {
 
 async function stopFocus() {
   const status = await apiFetch("/focus/stop", { method: "POST" });
-  focusState = status;
+  focusState = {
+    ...status,
+    blocked_sites: normalizeSiteList(status?.blocked_sites),
+  };
   chrome.storage.local.set({ focusState });
   chrome.runtime.sendMessage({ type: "focus-status", status: focusState });
   return status;
@@ -264,7 +301,7 @@ function enforceFocusMode(tabId, url) {
 
   try {
     const domain = new URL(url).hostname.toLowerCase();
-    const blocked = (focusState.blocked_sites || []).includes(domain);
+    const blocked = isDomainBlocked(domain, focusState.blocked_sites || []);
     if (!blocked) return;
 
     const redirectUrl = chrome.runtime.getURL(`blocked.html?site=${encodeURIComponent(domain)}`);
@@ -412,5 +449,38 @@ function reportContentFlag(payload) {
   }).catch((error) => {
     reportedContentCache.delete(cacheKey);
     throw error;
+  });
+}
+
+function normalizeSiteList(sites = []) {
+  const normalized = new Set();
+  (sites || []).forEach((raw) => {
+    if (!raw) return;
+    let site = String(raw).trim().toLowerCase();
+    if (!site) return;
+
+    try {
+      if (!site.includes("://")) {
+        site = `https://${site}`;
+      }
+      const url = new URL(site);
+      site = url.hostname.toLowerCase();
+    } catch (_err) {
+      site = site.replace(/^https?:\/\//, "");
+    }
+
+    site = site.replace(/^www\./, "");
+    if (site) normalized.add(site);
+  });
+  return Array.from(normalized);
+}
+
+function isDomainBlocked(domain, blockedSites) {
+  if (!blockedSites?.length || !domain) return false;
+  const cleanDomain = domain.replace(/^www\./, "");
+  return blockedSites.some((site) => {
+    if (!site) return false;
+    if (cleanDomain === site) return true;
+    return cleanDomain.endsWith(`.${site}`);
   });
 }
