@@ -282,8 +282,27 @@ body {
 
 .actions {
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 8px 0 6px;
+}
+
+.focus-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
   gap: 6px;
-  margin: 6px 0 4px;
+}
+
+@media (min-width: 360px) {
+  .action-buttons {
+    flex-direction: row;
+  }
 }
 
 .btn {

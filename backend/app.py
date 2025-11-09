@@ -1,12 +1,17 @@
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from threading import Lock
 from typing import Any, Dict
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 
-from utils.moderation import ModerationError, check_message_safety
+from utils.moderation import (
+    ModerationError,
+    check_message_safety,
+    get_all_keywords,
+)
 
 app = Flask(__name__)
 CORS(app)
@@ -26,6 +31,7 @@ _focus_state: Dict[str, Any] = {
     "blocked_sites": [],
     "total_focus_time": timedelta(),
 }
+DASHBOARD_DIR = Path(__file__).resolve().parent.parent / "dashboard"
 
 
 def _update_usage_stats(user: str, flagged: bool) -> None:
@@ -50,12 +56,11 @@ def _record_flagged_message(user: str, text: str, categories: Dict[str, Any]) ->
             _flagged_messages.pop(0)
 
 
-def _get_focus_status() -> Dict[str, Any]:
-    with _stats_lock:
-        active = _focus_state["active"]
-        started_at = _focus_state["started_at"]
-        total_focus = _focus_state["total_focus_time"]
-        blocked_sites = list(_focus_state["blocked_sites"])
+def _focus_status_snapshot() -> Dict[str, Any]:
+    active = _focus_state["active"]
+    started_at = _focus_state["started_at"]
+    total_focus = _focus_state["total_focus_time"]
+    blocked_sites = list(_focus_state["blocked_sites"])
 
     if active and started_at:
         elapsed = datetime.now(timezone.utc) - started_at
@@ -70,6 +75,11 @@ def _get_focus_status() -> Dict[str, Any]:
         "duration_seconds": total_seconds,
         "blocked_sites": blocked_sites,
     }
+
+
+def _get_focus_status() -> Dict[str, Any]:
+    with _stats_lock:
+        return _focus_status_snapshot()
 
 
 @app.route("/")
@@ -102,6 +112,11 @@ def moderate() -> Any:
     return jsonify(moderation_result)
 
 
+@app.route("/moderation/keywords")
+def moderation_keywords() -> Any:
+    return jsonify({"keywords": get_all_keywords()})
+
+
 @app.route("/stats")
 def stats() -> Any:
     with _stats_lock:
@@ -110,7 +125,7 @@ def stats() -> Any:
             "active_users": len(_active_users),
             "flagged_recent": len(_flagged_messages),
             "focus_active": _focus_state["active"],
-            "focus_duration_seconds": _get_focus_status()["duration_seconds"],
+            "focus_duration_seconds": _focus_status_snapshot()["duration_seconds"],
         }
     return jsonify(response)
 
@@ -119,6 +134,23 @@ def stats() -> Any:
 def flagged_messages() -> Any:
     with _stats_lock:
         return jsonify({"messages": list(_flagged_messages)})
+
+
+@app.route("/dashboard/")
+def dashboard_index() -> Any:
+    if not DASHBOARD_DIR.exists():
+        return (
+            "<h1>Dashboard not found</h1><p>The dashboard directory is missing.</p>",
+            404,
+        )
+    return send_from_directory(DASHBOARD_DIR, "index.html")
+
+
+@app.route("/dashboard/<path:resource>")
+def dashboard_assets(resource: str) -> Any:
+    if not DASHBOARD_DIR.exists():
+        return jsonify({"error": "dashboard directory not found"}), 404
+    return send_from_directory(DASHBOARD_DIR, resource)
 
 
 @app.route("/focus/start", methods=["POST"])
