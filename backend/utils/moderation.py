@@ -127,3 +127,14 @@ def check_message_safety(text: str) -> Dict[str, Any]:
             category: category in matches for category in KEYWORD_CATEGORIES
         },
     }
+
+
+def get_all_keywords() -> List[str]:
+    """Return a sorted list of unique keywords used for moderation."""
+    unique_keywords: Set[str] = set()
+    for keywords in KEYWORD_CATEGORIES.values():
+        for keyword in keywords:
+            normalized = keyword.strip().lower()
+            if normalized:
+                unique_keywords.add(normalized)
+    return sorted(unique_keywords)

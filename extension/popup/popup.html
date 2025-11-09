@@ -63,21 +63,25 @@
 
     <!-- Actions -->
     <section class="actions">
-      <label class="focus-label" for="blockedSitesInput">
-        Block these sites during focus (comma separated):
-      </label>
-      <input
-        id="blockedSitesInput"
-        class="text-input"
-        placeholder="youtube.com, reddit.com"
-        type="text"
-      />
-      <button id="focusModeBtn" class="btn primary-btn">
-        ✨ Start Focus Mode
-      </button>
-      <button id="openDashboardBtn" class="btn ghost-btn">
-        📊 Open Dashboard & Settings
-      </button>
+      <div class="focus-field">
+        <label class="focus-label" for="blockedSitesInput">
+          Block these sites during focus (comma separated):
+        </label>
+        <input
+          id="blockedSitesInput"
+          class="text-input"
+          placeholder="youtube.com, reddit.com"
+          type="text"
+        />
+      </div>
+      <div class="action-buttons">
+        <button id="focusModeBtn" class="btn primary-btn">
+          ✨ Start Focus Mode
+        </button>
+        <button id="openDashboardBtn" class="btn ghost-btn">
+          📊 Open Dashboard & Settings
+        </button>
+      </div>
     </section>
 
     <!-- Bottom status -->

@@ -1,7 +1,6 @@
 const BACKEND_URL = "http://localhost:5000";
 const DAILY_LIMIT_MINUTES = 120;
 const THEME_KEY = "safespace_theme";
-const SAFE_KEY = "safespace_safe_browsing";
 
 let focusStatus = {
   active: false,
@@ -43,14 +42,31 @@ function initThemeControls() {
 
 function initSafeToggle() {
   const safeToggle = document.getElementById("safeBrowsingToggle");
-  const savedSafe = localStorage.getItem(SAFE_KEY);
-  let safeOn = savedSafe !== "off";
-  updateSafeToggle(safeToggle, safeOn);
+  fetchSafeMode()
+    .then((enabled) => updateSafeToggle(safeToggle, enabled))
+    .catch((error) => {
+      console.warn("[SafeSpace popup] Unable to load safe mode:", error);
+      updateSafeToggle(safeToggle, true);
+    });
 
-  safeToggle.addEventListener("click", () => {
-    safeOn = !safeOn;
-    updateSafeToggle(safeToggle, safeOn);
-    localStorage.setItem(SAFE_KEY, safeOn ? "on" : "off");
+  safeToggle.addEventListener("click", async () => {
+    const enabled = safeToggle.classList.contains("chip-on");
+    const next = !enabled;
+    updateSafeToggle(safeToggle, next);
+
+    try {
+      const result = await sendRuntimeMessage({
+        type: "set-safe-mode",
+        enabled: next,
+      });
+      if (!result?.ok) {
+        throw new Error(result?.error || "Unable to update safe mode");
+      }
+      updateSafeToggle(safeToggle, Boolean(result.enabled));
+    } catch (error) {
+      console.warn("[SafeSpace popup] Unable to toggle safe mode:", error);
+      updateSafeToggle(safeToggle, enabled);
+    }
   });
 }
 
@@ -73,11 +89,17 @@ function initFocusControls() {
 
 function initOpenDashboard() {
   const openDashboardBtn = document.getElementById("openDashboardBtn");
-  openDashboardBtn.addEventListener("click", () => {
-    const url = chrome?.runtime?.getURL
-      ? chrome.runtime.getURL("dashboard/index.html")
-      : "../dashboard/index.html";
-    window.open(url, "_blank");
+  openDashboardBtn.addEventListener("click", async () => {
+    const url = `${BACKEND_URL}/dashboard/`;
+    try {
+      const result = await sendRuntimeMessage({ type: "open-dashboard", url });
+      if (!result?.ok) {
+        throw new Error(result?.error || "Unable to open dashboard tab");
+      }
+    } catch (error) {
+      console.warn("[SafeSpace popup] Falling back to window.open", error);
+      window.open(url, "_blank");
+    }
   });
 }
 
@@ -271,4 +293,12 @@ function sendRuntimeMessage(message) {
       resolve(response);
     });
   });
+}
+
+async function fetchSafeMode() {
+  const result = await sendRuntimeMessage({ type: "get-safe-mode" });
+  if (!result?.ok) {
+    throw new Error(result?.error || "Unable to fetch safe mode state");
+  }
+  return Boolean(result.enabled);
 }
