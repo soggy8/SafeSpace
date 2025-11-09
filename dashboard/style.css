@@ -32,6 +32,12 @@ body {
   font-size: 14px;
 }
 
+.logo_head{
+  line-height: 0;
+  width: 20%;
+
+}
+
 .refresh-btn {
   padding: 10px 16px;
   border-radius: 999px;
