@@ -1,3 +1,5 @@
+/* Dashboard styling for SafeSpace overview page. */
+
 * {
   box-sizing: border-box;
 }
@@ -23,13 +25,33 @@ body {
 
 .logo h1 {
   margin: 0;
-  font-size: 24px;
+  font-size: 22px;
+  font-weight: 700;
 }
 
-.logo p {
-  margin: 4px 0 0;
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.logo-subtitle {
+  margin: 0;
   color: #6b7280;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .logo_head{

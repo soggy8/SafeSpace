@@ -1,3 +1,5 @@
+// Client-side controller for the dashboard. Polls backend stats and renders UI cards.
+
 const BACKEND_URL = "http://localhost:5000";
 const REFRESH_INTERVAL = 10000;
 
@@ -10,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function loadDashboardData() {
+  // Fetch metrics in parallel so the UI remains responsive.
   const [stats, flagged, focus] = await Promise.allSettled([
     fetchJson("/stats"),
     fetchJson("/flagged"),
@@ -28,6 +31,7 @@ async function loadDashboardData() {
 }
 
 function renderStats(data) {
+  // Update top-level counter cards.
   const totalMessages = document.getElementById("totalMessages");
   const flaggedMessages = document.getElementById("flaggedMessages");
   const focusState = document.getElementById("focusState");
@@ -42,6 +46,7 @@ function renderStats(data) {
 }
 
 function renderFlagged(messages) {
+  // Render the table of recently flagged messages.
   const tbody = document.getElementById("flaggedTableBody");
   tbody.innerHTML = "";
 
@@ -68,6 +73,7 @@ function renderFlagged(messages) {
 }
 
 function renderBlockedSites(sites, active) {
+  // Show the domains currently blocked while focus mode is enabled.
   const list = document.getElementById("blockedSitesList");
   list.innerHTML = "";
 
@@ -95,6 +101,7 @@ function renderBlockedSites(sites, active) {
 }
 
 async function fetchJson(path, options = {}) {
+  // Basic fetch wrapper with credential passthrough and error surfacing.
   const res = await fetch(`${BACKEND_URL}${path}`, {
     ...options,
     credentials: "include",

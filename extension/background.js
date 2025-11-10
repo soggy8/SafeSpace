@@ -20,6 +20,17 @@ async function updateAudioActivity() {
     console.warn("[SafeSpace] Unable to update audio activity:", error);
   }
 }
+/**
+ * SafeSpace background service worker.
+ *
+ * Responsibilities:
+ *   - Tracks active browsing time (including audible tabs).
+ *   - Synchronises focus-mode state with the Flask backend.
+ *   - Fetches moderation keywords and broadcasts updates to content scripts.
+ *   - Handles safe browsing toggles and reports flagged content.
+ *   - Acts as a bridge between popup UI actions and backend REST endpoints.
+ */
+
 const BACKEND_URL = "http://localhost:5000";
 const USAGE_PING_INTERVAL = 1000;
 const FOCUS_SYNC_INTERVAL = 10000;

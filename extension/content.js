@@ -1,6 +1,14 @@
+/**
+ * Content script responsible for:
+ *   - Reporting user activity back to the background worker.
+ *   - Fetching moderation keywords and blurring matching text nodes.
+ *   - Reporting flagged phrases to the backend (so the dashboard stays up to date).
+ */
+
 const ACTIVITY_EVENTS = ["mousemove", "keydown", "scroll", "click"];
 const MASK_STYLE_ID = "safespace-blur-style";
 const SKIP_PARENT_TAGS = new Set([
+  // Avoid modifying code snippets or inputs to minimise false positives.
   "SCRIPT",
   "STYLE",
   "NOSCRIPT",
@@ -35,6 +43,7 @@ function reportActivity() {
 }
 
 function initializeModerationMask() {
+  // Kick off initial keyword fetch and subscribe to background updates.
   requestKeywords();
 
   chrome.runtime.onMessage.addListener((msg) => {
@@ -50,6 +59,7 @@ function initializeModerationMask() {
 }
 
 function requestKeywords() {
+  // Ask the background worker for the latest keyword list.
   sendBackgroundMessage({ type: "get-keywords" })
     .then((response) => {
       if (response?.ok) {
@@ -62,6 +72,7 @@ function requestKeywords() {
 }
 
 function requestSafeMode() {
+  // Sync the safe-mode toggle so masking can be turned off remotely.
   sendBackgroundMessage({ type: "get-safe-mode" })
     .then((response) => {
       if (response?.ok) {
@@ -88,6 +99,7 @@ function updateSafeMode(enabled) {
 }
 
 function updateKeywordMask(keywords) {
+  // Rebuild the regex and reprocess the DOM when the keyword list changes.
   const normalized = Array.isArray(keywords)
     ? Array.from(new Set(keywords.map((kw) => kw.trim().toLowerCase()))).sort()
     : [];
@@ -134,6 +146,7 @@ function updateKeywordMask(keywords) {
 }
 
 function processNode(node) {
+  // Traverse the DOM recursively and blur eligible text nodes.
   if (!node || !keywordRegex) return;
 
   if (node.nodeType === Node.TEXT_NODE) {
@@ -157,6 +170,7 @@ function processNode(node) {
 }
 
 function maskTextNode(node) {
+  // Replace offending text with a masked span and record the match.
   if (!safeModeEnabled || !keywordRegex || !node?.textContent || !node.parentNode)
     return;
 
@@ -203,6 +217,7 @@ function maskTextNode(node) {
 }
 
 function startObserver() {
+  // Observe future DOM changes so late-loaded content is also masked.
   if (mutationObserver || !document.body) return;
 
   mutationObserver = new MutationObserver((mutations) => {
@@ -237,6 +252,7 @@ function disconnectObserver() {
 }
 
 function ensureMaskStyle() {
+  // Inject the CSS used for the blurred span overlays.
   if (document.getElementById(MASK_STYLE_ID)) return;
 
   const style = document.createElement("style");
@@ -286,6 +302,7 @@ function ensureMaskStyle() {
 }
 
 function removeExistingMasks() {
+  // Restore plaintext when safe-mode is disabled or keywords are cleared.
   document.querySelectorAll(".safespace-blur").forEach((span) => {
     const original = span.getAttribute("data-original") || span.textContent;
     if (span.replaceWith) {
@@ -297,6 +314,7 @@ function removeExistingMasks() {
 }
 
 function buildKeywordRegex(keywords) {
+  // Build a single regex that matches any keyword (word boundary aware).
   if (!keywords.length) return null;
 
   const patterns = keywords
@@ -341,6 +359,7 @@ function sendBackgroundMessage(message) {
 }
 
 function maybeReportSensitiveMatch(matchText) {
+  // Notify the background script so the backend records this occurrence.
   if (!safeModeEnabled) return;
   const normalized = matchText.trim().toLowerCase();
   if (!normalized) return;

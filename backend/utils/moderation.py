@@ -1,3 +1,5 @@
+"""Simple keyword-based moderation helpers used by the backend and extension."""
+
 from __future__ import annotations
 
 from typing import Any, Dict, List, Set
@@ -7,6 +9,8 @@ class ModerationError(RuntimeError):
     """Raised when the moderation service fails."""
 
 
+# Buckets of phrases that map directly to content categories. The extension
+# fetches these so client-side blurring stays in sync with the backend.
 KEYWORD_CATEGORIES: Dict[str, List[str]] = {
     "self-harm": [
         "kill myself",
@@ -100,10 +104,12 @@ KEYWORD_CATEGORIES: Dict[str, List[str]] = {
 
 
 def _normalize(text: str) -> str:
+    """Prepare text for keyword matching (trim + lowercase)."""
     return (text or "").strip().lower()
 
 
 def _find_matches(normalized_text: str) -> Set[str]:
+    """Return the set of categories that match a given text snippet."""
     matches: Set[str] = set()
     for category, keywords in KEYWORD_CATEGORIES.items():
         if any(keyword in normalized_text for keyword in keywords):

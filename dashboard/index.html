@@ -7,14 +7,19 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
+    <!-- Top navigation / refresh controls -->
     <header class="header">
-      <div class="logoText">
-        <img src="/extension/popup/logo.png" alt="" class="logo_head">
-        <h1>SafeSpace</h1>
+      <div class="logo">
+        <img src="/extension/popup/logo.png" alt="SafeSpace logo" class="logo-img" />
+        <div class="logo-text">
+          <h1>SafeSpace</h1>
+          <p class="logo-subtitle">Digital wellbeing &amp; safety overview</p>
+        </div>
       </div>
       <button class="refresh-btn" id="refreshBtn">Refresh</button>
     </header>
 
+    <!-- Main dashboard content -->
     <main class="layout">
       <section class="cards">
         <article class="card">
@@ -67,6 +72,7 @@
       </section>
     </main>
 
+    <!-- Footer keeps connection info visible -->
     <footer class="footer">
       <span>Backend endpoint: <code>http://localhost:5000</code></span>
     </footer>

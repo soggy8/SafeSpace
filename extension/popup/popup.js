@@ -1,3 +1,10 @@
+/**
+ * Popup UI controller for the SafeSpace extension.
+ *
+ * Handles theme toggling, safe-browsing state, focus mode controls,
+ * stats rendering, and dashboard navigation.
+ */
+
 const BACKEND_URL = "http://localhost:5000";
 const DAILY_LIMIT_MINUTES = 120;
 const THEME_KEY = "safespace_theme";
@@ -28,6 +35,7 @@ async function loadInitialState() {
 }
 
 function initThemeControls() {
+  // Restore and toggle the light/dark theme preference.
   const themeToggle = document.getElementById("themeToggle");
   const savedTheme = localStorage.getItem(THEME_KEY) || "light";
   applyTheme(savedTheme);
@@ -41,6 +49,7 @@ function initThemeControls() {
 }
 
 function initSafeToggle() {
+  // Round-trip safe browsing state through the background script.
   const safeToggle = document.getElementById("safeBrowsingToggle");
   fetchSafeMode()
     .then((enabled) => updateSafeToggle(safeToggle, enabled))
@@ -71,6 +80,7 @@ function initSafeToggle() {
 }
 
 function initFocusControls() {
+  // Allow the user to start/stop focus mode from the popup.
   const focusModeBtn = document.getElementById("focusModeBtn");
 
   focusModeBtn.addEventListener("click", async () => {
@@ -88,6 +98,7 @@ function initFocusControls() {
 }
 
 function initOpenDashboard() {
+  // Open the backend-hosted dashboard in a new tab.
   const openDashboardBtn = document.getElementById("openDashboardBtn");
   openDashboardBtn.addEventListener("click", async () => {
     const url = `${BACKEND_URL}/dashboard/`;
@@ -104,6 +115,7 @@ function initOpenDashboard() {
 }
 
 async function refreshUsage() {
+  // Render the daily usage meter using data stored by the background script.
   const { siteTime = {} } = await chrome.storage.local.get("siteTime");
   const totalSeconds = Object.values(siteTime).reduce((sum, seconds) => sum + seconds, 0);
   const usedMinutes = Math.floor(totalSeconds / 60);
@@ -137,6 +149,7 @@ async function refreshUsage() {
 }
 
 async function refreshStats() {
+  // Pull aggregated moderation stats from the backend.
   try {
     const stats = await fetchJSON("/stats");
     updateFooter(stats.focus_active);
@@ -146,6 +159,7 @@ async function refreshStats() {
 }
 
 async function refreshFlagged() {
+  // Show the latest flagged messages (if any).
   const flaggedList = document.getElementById("flaggedList");
   flaggedList.innerHTML = "";
 
@@ -167,6 +181,7 @@ async function refreshFlagged() {
 }
 
 async function refreshFocusStatus() {
+  // Keep the focus controls aligned with server state.
   try {
     const status = await fetchJSON("/focus/status");
     focusStatus = status;
@@ -177,6 +192,7 @@ async function refreshFocusStatus() {
 }
 
 function updateFocusUI() {
+  // Reflect focus state in the button, footer, and blocked site input field.
   const focusModeBtn = document.getElementById("focusModeBtn");
   const input = document.getElementById("blockedSitesInput");
   const footerText = document.querySelector(".footer-text");
@@ -197,6 +213,7 @@ function updateFocusUI() {
 }
 
 async function sendFocusStart() {
+  // Ask the background script to start focus mode and handle errors gracefully.
   const input = document.getElementById("blockedSitesInput");
   const blockedSites = parseSites(input?.value || "");
   const result = await sendRuntimeMessage({ type: "focus-start", blockedSites });
@@ -210,6 +227,7 @@ async function sendFocusStart() {
 }
 
 async function sendFocusStop() {
+  // Stop focus mode via the background script.
   const result = await sendRuntimeMessage({ type: "focus-stop" });
   if (!result?.ok) {
     throw new Error(result?.error || "Unable to stop focus mode");
@@ -243,6 +261,7 @@ function formatMinutes(mins) {
 }
 
 function parseSites(value) {
+  // Convert comma-separated sites into an array used by the background worker.
   return value
     .split(",")
     .map((site) => site.trim().toLowerCase())
@@ -250,6 +269,7 @@ function parseSites(value) {
 }
 
 async function fetchJSON(path, options = {}) {
+  // Helper for hitting backend REST endpoints.
   const res = await fetch(`${BACKEND_URL}${path}`, {
     ...options,
     credentials: "include",
