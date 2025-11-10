@@ -107,5 +107,3 @@ It visualises:
 - Refine the UI components with a component library or framework if desired.
 
 ---
-
-Happy hacking! Let me know if you want help wiring up new features or tightening the production story.*** End Patch
